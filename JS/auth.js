@@ -1,20 +1,5 @@
-
 //  =====  SIGN UP  (P1)  =====
-
-function bringElements() {
-    const user = {
-        fullName:   document.getElementById('fullName'),
-        email   :   document.getElementById('email'),
-        company :   document.getElementById('company'),
-        password:   document.getElementById('password'),
-        confPass:   document.getElementById('confirmPassword')
-    }
-
-    return user;
-}
-
-
-function resetFields(user) {
+function resetFieldErrors(user) {
     for (let key in user)
         user[key].classList.remove('input-error');
 
@@ -41,11 +26,23 @@ function showFieldError(input, text) {
 
 
 //  =====  SIGN UP Main function  =====
-function setUpSignupForm() {
-    document.getElementById('signup-form').addEventListener('submit', e => {
+function setSignUpForm() {
+    // add guard if we are in Sing Up page
+    const form = document.getElementById('signup-form');
+    if (!form) return;
+    
+    form.addEventListener('submit', e => {
         e.preventDefault();
-        const user = bringElements();
-        resetFields(user);
+
+        const user = {
+            fullName:   document.getElementById('fullName'),
+            email   :   document.getElementById('email'),
+            company :   document.getElementById('company'),
+            password:   document.getElementById('password'),
+            confPass:   document.getElementById('confirmPassword')
+        }
+
+        resetFieldErrors(user);
 
         const users = JSON.parse(localStorage.getItem('crm_users')) || [];
         let hasError = false;
@@ -85,7 +82,6 @@ function setUpSignupForm() {
             hasError = true;
         }
 
-
         if (hasError) return;
 
         const newUser = {
@@ -105,12 +101,60 @@ function setUpSignupForm() {
         setTimeout(() => {
             window.location.href = "index.html";
         }, 1500);
-    })
+    });
+}
+
+//  =====  LOG IN  (P2)  =====
+function setLogInForm() {
+    // add guard if we are in Log In page
+    const form = document.getElementById('login-form');
+    if (!form) return;
+
+    form.addEventListener('submit', e => {
+        e.preventDefault();
+        
+        const email = document.getElementById('email');
+        const password = document.getElementById('password');
+
+        resetFieldErrors({email, password});
+        let hasError = false;
+
+        
+        if (email.value.trim() === "") {
+            showFieldError(email, "Email is required");
+            hasError = true;
+        }
+        if (password.value === "") {
+            showFieldError(password, "Password is required");
+            hasError = true;
+        }
+
+        if (hasError) return;
+
+        const users = JSON.parse(localStorage.getItem('crm_users')) || [];
+        const emailValue = email.value.trim().toLowerCase();
+        const passwordValue = password.value;
+        const matchedUser = users.find(u => u.email === emailValue && u.password === passwordValue);
+
+        if (!matchedUser) {
+            showFieldError(password, "Invalid email or password");
+            return;
+        }
+
+        const session = {
+            userId: matchedUser.id,
+            email: matchedUser.email,
+            loginAt: new Date().toISOString()
+        };
+
+        localStorage.setItem('crm_session', JSON.stringify(session));
+        window.location.href = "dashboard.html";
+    });
 }
 
 
-
-// CALL functions
-document.addEventListener('DOMContentLoaded', e => {
-    setUpSignupForm();
+// CALLs functions
+document.addEventListener('DOMContentLoaded', () => {
+    setSignUpForm();
+    setLogInForm();
 });
