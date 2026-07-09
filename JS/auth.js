@@ -1,4 +1,6 @@
 
+//  =====  SIGN UP  (P1)  =====
+
 function bringElements() {
     const user = {
         fullName:   document.getElementById('fullName'),
@@ -10,6 +12,7 @@ function bringElements() {
 
     return user;
 }
+
 
 function resetFields(user) {
     for (let key in user)
@@ -37,20 +40,18 @@ function showFieldError(input, text) {
 }
 
 
-function setupSignupForm() {
-    const form = document.getElementById('signup-form');
-
-    form.addEventListener('submit', e => {
+//  =====  SIGN UP Main function  =====
+function setUpSignupForm() {
+    document.getElementById('signup-form').addEventListener('submit', e => {
         e.preventDefault();
         const user = bringElements();
         resetFields(user);
 
+        const users = JSON.parse(localStorage.getItem('crm_users')) || [];
         let hasError = false;
 
         // CHECK FULL name
-        if (user.fullName.value.trim().length >= 3) {
-            console.log("yes");
-        } else {
+        if (user.fullName.value.trim().length < 3) {
             showFieldError(user.fullName, "Full name must be at least 3 characters");
             hasError = true;
         }
@@ -58,39 +59,52 @@ function setupSignupForm() {
         // CHECK Email
         const email = user.email.value.trim().toLowerCase();
         const atIndex = email.indexOf('@');
-        if (atIndex > 0 && email.slice(atIndex + 1).includes('.')) {
-            console.log("YES");
-        } else {
+
+        if (atIndex === -1 || !email.slice(atIndex + 1).includes('.')) {
             showFieldError(user.email, "Please enter a valid email address");
+            hasError = true;
+        } else if (users.some(u => u.email === email)) {
+            showFieldError(user.email, "An account with this email already exists");
             hasError = true;
         }
 
-        // CHECK Company
-        if (user.company.value.trim() !== ""){
-            console.log("Yes");
-        }
-
-
         // CHECK password
-        let pass = user.password.value.trim();
+        let pass = user.password.value;
         let isNum = /[0-9]/.test(pass);
         let isChar = /[a-zA-Z]/.test(pass);
         let isPass = pass.length >= 8;
 
-        if (isNum && isChar && isPass) {
-            console.log("YES");
-        } else {
+        if (!isNum || !isChar || !isPass) {
             showFieldError(user.password, "Password must be at least 8 characters and contain a letter and a number");
             hasError = true;
         }
 
         // CHECK confirm password
-        if (pass === user.confPass.value.trim()) {
-            console.log("YES");
-        } else {
+        if (pass !== user.confPass.value.trim()) {
             showFieldError(user.confPass, "Passwords do not match");
             hasError = true;
         }
+
+
+        if (hasError) return;
+
+        const newUser = {
+            id: Date.now(),
+            fullName: user.fullName.value.trim(),
+            email: email,
+            password: pass,
+            company: user.company.value.trim(),
+            createdAt: new Date().toISOString()
+        }
+
+        users.push(newUser);
+        localStorage.setItem('crm_users', JSON.stringify(users));
+
+        showToast("Account created successfully! Please log in.", "success");
+
+        setTimeout(() => {
+            window.location.href = "index.html";
+        }, 1500);
     })
 }
 
@@ -98,5 +112,5 @@ function setupSignupForm() {
 
 // CALL functions
 document.addEventListener('DOMContentLoaded', e => {
-    setupSignupForm();
+    setUpSignupForm();
 });
