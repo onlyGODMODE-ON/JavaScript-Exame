@@ -5,6 +5,10 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Log In · 10X CRM</title>
   <link rel="stylesheet" href="../css/styles.css" />
+
+  <script src="../JS/guard.js"></script>
+  <script>redirectIfLoggedIn();</script>
+  
 </head>
 <body class="auth-page">
 
@@ -31,8 +35,7 @@
     <p class="auth-footer">Don't have an account? <a href="signup.html">Sign up</a></p>
   </div>
 
-    <script src="guard.js"></script>
-    <script>redirectIfLoggedIn();</script>
+    
     <script src="../JS/toast.js"></script>
     <script src="../JS/auth.js"></script>
 

@@ -147,6 +147,8 @@ function setLogInForm() {
             email: matchedUser.email,
             loginAt: new Date().toISOString()
         };
+        
+        
 
         localStorage.setItem('crm_session', JSON.stringify(session));
         window.location.href = 'dashboard.html';
