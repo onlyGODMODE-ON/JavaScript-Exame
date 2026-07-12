@@ -43,7 +43,7 @@ function setSignUpForm() {
         }
 
         resetFieldErrors(user);
-
+        // get data from key 'crm_users' in localStorage and parse to make it clear
         const users = JSON.parse(localStorage.getItem('crm_users')) || [];
         let hasError = false;
 
@@ -94,12 +94,13 @@ function setSignUpForm() {
         }
 
         users.push(newUser);
+        // Save users array key: 'crm_users'  in localStorage
         localStorage.setItem('crm_users', JSON.stringify(users));
 
         showToast("Account created successfully! Please log in.", "success");
 
         setTimeout(() => {
-            window.location.href = "index.html";
+            window.location.href = 'index.html';
         }, 1500);
     });
 }
@@ -148,7 +149,7 @@ function setLogInForm() {
         };
 
         localStorage.setItem('crm_session', JSON.stringify(session));
-        window.location.href = "dashboard.html";
+        window.location.href = 'dashboard.html';
     });
 }
 
