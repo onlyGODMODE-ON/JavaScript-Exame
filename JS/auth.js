@@ -43,6 +43,7 @@ function setSignUpForm() {
         }
 
         resetFieldErrors(user);
+        
         // get data from key 'crm_users' in localStorage and parse to make it clear
         const users = JSON.parse(localStorage.getItem('crm_users')) || [];
         let hasError = false;
@@ -147,8 +148,6 @@ function setLogInForm() {
             email: matchedUser.email,
             loginAt: new Date().toISOString()
         };
-        
-        
 
         localStorage.setItem('crm_session', JSON.stringify(session));
         window.location.href = 'dashboard.html';

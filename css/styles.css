@@ -621,6 +621,34 @@ input.input-error, select.input-error {
   line-height: 1;
 }
 
+/* ლამაზი, თხელი სქროლბარი Chrome/Edge/Safari-სთვის */
+.notes-list::-webkit-scrollbar,
+.modal-box::-webkit-scrollbar {
+  width: 6px;
+}
+
+.notes-list::-webkit-scrollbar-track,
+.modal-box::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.notes-list::-webkit-scrollbar-thumb,
+.modal-box::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 999px;
+}
+
+.notes-list::-webkit-scrollbar-thumb:hover,
+.modal-box::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
+
+/* Firefox-ისთვის ცალკე სინტაქსია */
+.notes-list, .modal-box {
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
+}
+
 .detail-top {
   display: flex;
   align-items: center;
