@@ -3,12 +3,9 @@
 let currentDetailClientId = null;
 
 
-// bring 'crm_clients' clients or return empty array
-const loadClientsSimple = () => JSON.parse(localStorage.getItem('crm_clients')) || [];
-
+// Render Clients P4.3
 const formatCurrency = amount => '$' + amount.toLocaleString('en-US');
 
-// Render Clients P4.3
 function buildClientCard(client) {
     const card = document.createElement('div');
     card.className = 'client-card';
@@ -175,12 +172,55 @@ function changeStatus(clients) {
 }
 
 
-document.addEventListener('DOMContentLoaded', () => {
-    const clients = loadClientsSimple();
+// ============================
+// add Delete button functional
+// ============================
+
+function deleteClient(clients) {
+    const container = document.querySelector('.clients-list');
+    if (!container) return;
+
+    container.addEventListener('click', async e => {
+        const deleteBtn = e.target.closest('.delete-btn');
+        if (!deleteBtn) return;
+
+        const card = deleteBtn.closest('.client-card');
+        const clientId = Number(card.getAttribute('data-id'));
+        
+        const confirmed = confirm("Delete this client? This cannot be undone.");
+        if (!confirmed) return;
+
+        try {
+            const response = await fetch(`https://dummyjson.com/users/${clientId}`, {
+                method: 'DELETE'
+            });
+            if (!response.ok && response.status !== 404) {
+                throw new Error('Delete request failed');
+            }
+        } catch (err) {
+            console.error(err);
+        }
+
+        clients = clients.filter(client => client.id !== clientId);
+        localStorage.setItem("crm_clients", JSON.stringify(clients));
+
+        renderClients(clients);
+        showToast("Client deleted", "success");
+    });
+}
+
+
+
+
+document.addEventListener('DOMContentLoaded', async () => {
+    let clients = await loadClients();
 
     renderClients(clients);
+
+    // client cards functional
     setupClientModal(clients);
     addNoteForm(clients);
     changeStatus(clients);
+    deleteClient(clients);
 });
 
