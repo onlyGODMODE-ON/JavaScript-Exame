@@ -6,7 +6,6 @@ let currentDetailClientId = null;
 // bring 'crm_clients' clients or return empty array
 const loadClientsSimple = () => JSON.parse(localStorage.getItem('crm_clients')) || [];
 
-
 const formatCurrency = amount => '$' + amount.toLocaleString('en-US');
 
 // Render Clients P4.3
@@ -24,10 +23,10 @@ function buildClientCard(client) {
         </div>
         <div class="client-meta">
             <select class="status-select" data-id="${client.id}">
-                <option value="Lead">Lead</option>
-                <option value="Contacted">Contacted</option>
-                <option value="Won">Won</option>
-                <option value="Lost">Lost</option>
+                <option value="Lead" ${client.status === "Lead" ? "selected" : ""}>Lead</option>
+                <option value="Contacted" ${client.status === "Contacted" ? "selected" : ""}>Contacted</option>
+                <option value="Won" ${client.status === "Won" ? "selected" : ""}>Won</option>
+                <option value="Lost" ${client.status === "Lost" ? "selected" : ""}>Lost</option>
             </select>
             <span class="deal-value">${formatCurrency(client.dealValue)}</span>
             <button class="btn btn-danger btn-small delete-btn" data-id="${client.id}">Delete</button>
@@ -51,6 +50,10 @@ function renderClients(clients) {
     clients.forEach(c => container.appendChild(buildClientCard(c)));
 }
 
+
+// ====================
+// client modal (panel)
+// ====================
 
 // add notes function
 function renderNotes(notes) {
@@ -95,11 +98,10 @@ function addNoteForm(clients) {
 }
 
 
-// client modal (panel)
+
 function setupClientModal(clients) {
     const container = document.querySelector('.clients-list');
     const modal = document.querySelector('#client-detail-modal');
-    const status = document.querySelector('.status-select');
 
     if (!container) return;
     
@@ -125,7 +127,7 @@ function setupClientModal(clients) {
         modal.querySelector('#detail-status').textContent = client.status;
         modal.querySelector('#detail-deal-value').textContent = client.dealValue;
         modal.querySelector('#detail-since').textContent = new Date(client.createdAt).toLocaleDateString("en-US");
-        
+
         renderNotes(client.notes);
     });
 
@@ -151,6 +153,27 @@ function setupClientModal(clients) {
 }
 
 
+// ====================
+// add status changeing
+// ====================
+
+function changeStatus(clients) {
+    const container = document.querySelector('.clients-list');
+    if (!container) return;
+
+    container.addEventListener('click', e => {
+        let currentCard = e.target.closest('.status-select');
+        if (!currentCard) return;
+
+        const clientId = Number(currentCard.getAttribute('data-id'));
+        const client = clients.find(c => c.id === clientId);
+
+        client.status = currentCard.value;
+        
+        localStorage.setItem('crm_clients', JSON.stringify(clients));
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     const clients = loadClientsSimple();
@@ -158,4 +181,6 @@ document.addEventListener('DOMContentLoaded', () => {
     renderClients(clients);
     setupClientModal(clients);
     addNoteForm(clients);
+    changeStatus(clients);
 });
+
