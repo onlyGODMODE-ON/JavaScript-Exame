@@ -122,7 +122,7 @@ function setupClientModal(clients) {
         modal.querySelector('#detail-email').textContent = client.email;
         modal.querySelector('#detail-phone').textContent = client.phone;
         modal.querySelector('#detail-status').textContent = client.status;
-        modal.querySelector('#detail-deal-value').textContent = client.dealValue;
+        modal.querySelector('#detail-deal-value').textContent =  formatCurrency(client.dealValue);
         modal.querySelector('#detail-since').textContent = new Date(client.createdAt).toLocaleDateString("en-US");
 
         renderNotes(client.notes);
@@ -158,9 +158,9 @@ function changeStatus(clients) {
     const container = document.querySelector('.clients-list');
     if (!container) return;
 
-    container.addEventListener('click', e => {
-        let currentCard = e.target.closest('.status-select');
-        if (!currentCard) return;
+    container.addEventListener('change', e => {
+        let currentCard = e.target;
+        if (!currentCard.matches(".status-select")) return;
 
         const clientId = Number(currentCard.getAttribute('data-id'));
         const client = clients.find(c => c.id === clientId);
@@ -199,9 +199,12 @@ function deleteClient(clients) {
             }
         } catch (err) {
             console.error(err);
+            return;
         }
 
-        clients = clients.filter(client => client.id !== clientId);
+        const index = clients.findIndex(client => client.id === clientId);
+        if (index !== -1) clients.splice(index, 1);
+
         localStorage.setItem("crm_clients", JSON.stringify(clients));
 
         renderClients(clients);
@@ -210,6 +213,105 @@ function deleteClient(clients) {
 }
 
 
+// ======================
+// add clients functional
+// ====================== 
+
+function addClient(clients) {
+    const modal = document.querySelector('#add-client-modal');
+    const clientBtn = document.getElementById('add-client-btn');
+    const addClientModal = document.querySelector('.modal-overlay');
+    if (!addClientModal) return;
+
+    clientBtn.addEventListener('click', e => {
+        addClientModal.classList.add('open');
+    });
+
+    const newUser = {
+        name    :  document.getElementById('new-name'),
+        email   :  document.getElementById('new-email'),
+        phone   :  document.getElementById('new-phone'),
+        company :  document.getElementById('new-company'),
+        deal    :  document.getElementById('new-deal-value'),
+        status  :  document.getElementById('new-status')
+    }
+
+    const addForm = document.getElementById('add-client-form');
+
+    addForm.addEventListener('submit', e => {
+        e.preventDefault();
+        resetFieldErrors(newUser);
+
+        let isError = false;
+
+        // CHECK name
+        if (newUser.name.value.trim().length < 3) {
+            showFieldError(newUser.name, "Name must be at least 3 characters");
+            isError = true;
+        }
+
+        // CHECK Email
+        const email = newUser.email.value.trim().toLowerCase();
+        const atIndex = email.indexOf('@');
+
+        if (atIndex === -1 || !email.slice(atIndex + 1).includes('.')) {
+            showFieldError(newUser.email, "Please enter a valid email address");
+            isError = true;
+        } else if (clients.some(c => c.email === email)) {
+            showFieldError(newUser.email, "An account with this email already exists");
+            isError = true;
+        }
+
+        // CHECK Deal Value
+        let dealValue = newUser.deal.value;
+        let isPositiveNumber = true;
+
+        if (dealValue === "") isPositiveNumber = false;
+
+        for (let char of dealValue) {
+            if ('0' <= char && char <= '9') continue;
+            else { isPositiveNumber = false; break; }
+        }
+            
+        if (!isPositiveNumber) {
+            showFieldError(newUser.deal, "Deal value must be a positive number");
+            isError = true;
+        }
+            
+        if (isError) return;
+
+        let addNewUser = {
+            id: Date.now(),
+            name: newUser.name.value,
+            email: newUser.email.value.trim().toLowerCase(),
+            phone: newUser.phone.value.trim(),
+            company: newUser.company.value.trim(),
+            image: "https://dummyjson.com/icon/newclient/128",
+            status: newUser.status.value,
+            dealValue: Number(newUser.deal.value),
+            notes: [],
+            createdAt: new Date().toISOString()
+        }
+
+        clients.push(addNewUser);
+        localStorage.setItem("crm_clients", JSON.stringify(clients));
+
+        renderClients(clients);
+
+        addForm.reset();
+        modal.classList.remove('open');
+
+        showToast("Client added ✓", "success");
+    });
+
+
+    // remove add client modal
+    const closeModal = modal.querySelector('.modal-close');
+    modal.addEventListener('click', e => {
+        if (e.target === closeModal || !e.target.closest('.modal-box'))
+        modal.classList.remove('open');
+    });
+}
 
 
 document.addEventListener('DOMContentLoaded', async () => {
@@ -222,5 +324,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     addNoteForm(clients);
     changeStatus(clients);
     deleteClient(clients);
+
+    addClient(clients);
 });
 

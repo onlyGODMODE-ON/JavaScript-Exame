@@ -67,7 +67,7 @@ function renderStats(clients) {
     const activeDeals = clients.filter(c => c.status !== 'Won' && c.status !== 'Lost');
     document.getElementById('stat-active-deals').textContent = activeDeals.length;
 
-    const wonRevenue = clients.filter(c => c.status === 'Won').reduce((sum, c) => sum + c.dealValue, 0);
+    const wonRevenue = clients.filter(c => c.status === 'Won').reduce((sum, c) => sum + Number(c.dealValue), 0);
     document.getElementById('stat-won-revenue').textContent = '$' + wonRevenue.toLocaleString();
 
     const oneWeekAgo = Date.now() - 7 * 24 * 60 * 60 * 1000;
