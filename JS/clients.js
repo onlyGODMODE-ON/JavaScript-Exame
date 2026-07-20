@@ -308,8 +308,10 @@ function addClient(clients) {
     // remove add client modal
     const closeModal = modal.querySelector('.modal-close');
     modal.addEventListener('click', e => {
-        if (e.target === closeModal || !e.target.closest('.modal-box'))
-        modal.classList.remove('open');
+        if (e.target === closeModal || !e.target.closest('.modal-box')){
+            resetFieldErrors(newUser);
+            modal.classList.remove('open');
+        }
     });
 }
 
@@ -334,6 +336,40 @@ function searchByNameOrCompany(clients) {
 }
 
 
+// =====================
+// Add filter functional
+// =====================
+
+function filterCards(clients) {
+    const filter = document.querySelector('.filter-chips');
+    if (!filter) return;
+
+    filter.addEventListener('click', e => {
+        if (!e.target.classList.contains('filter-chip')) return;
+
+        const status = e.target.dataset.status;
+
+        const chips = filter.querySelectorAll('.filter-chip');
+        for (let i=0; i<chips.length; i++)
+            chips[i].classList.remove('active');
+        
+        e.target.classList.add('active');
+
+        // case: All
+        if (status === "All") renderClients(clients);
+        else {
+            let filteredChips = [];
+            for (let i=0; i<clients.length; i++){
+                if (clients[i].status === status)
+                    filteredChips.push(clients[i]);
+            }
+
+            renderClients(filteredChips);
+        }
+    });
+}
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     let clients = await loadClients();
 
@@ -349,5 +385,6 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     // search functional
     searchByNameOrCompany(clients);
+    filterCards(clients);
 });
 
