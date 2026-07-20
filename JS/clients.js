@@ -314,6 +314,26 @@ function addClient(clients) {
 }
 
 
+// ====================================
+// search by name or company functional
+// ====================================
+
+function searchByNameOrCompany(clients) {
+    const input = document.getElementById('search-input');
+    
+    input.addEventListener('input', e => {
+        let str = input.value.trim().toLowerCase();
+        let isSearched = [];
+        for (let i=0; i<clients.length; i++){
+            if (clients[i].name.toLowerCase().includes(str) || clients[i].company.toLowerCase().includes(str))
+                isSearched.push(clients[i]);
+        }
+
+        renderClients(isSearched);
+    });
+}
+
+
 document.addEventListener('DOMContentLoaded', async () => {
     let clients = await loadClients();
 
@@ -326,5 +346,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     deleteClient(clients);
 
     addClient(clients);
+
+    // search functional
+    searchByNameOrCompany(clients);
 });
 
