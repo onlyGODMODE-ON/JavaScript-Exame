@@ -1,7 +1,7 @@
 
 // which client is open in modal
 let currentDetailClientId = null;
-
+let rendered = [];
 
 // Render Clients P4.3
 const formatCurrency = amount => '$' + amount.toLocaleString('en-US');
@@ -316,9 +316,32 @@ function addClient(clients) {
 }
 
 
-// ====================================
-// search by name or company functional
-// ====================================
+// function returns object array which are elements on screen
+function whatIsRendered(clients) {
+    const container = document.getElementById('clients-list');
+    if (!container) return;
+
+    let ids = container.querySelectorAll('.client-card');
+
+    let onScreen = [];
+    
+    for (let i=0; i<ids.length; i++) {
+        let cardId = ids[i].dataset.id;
+        for (let j=0; j<clients.length; j++){
+            if (clients[j].id == cardId){
+                onScreen.push(clients[j]);
+                break;
+            }       
+        }
+    }
+
+    return onScreen;
+}
+
+
+// ===================================
+//      search by name or company
+// ===================================
 
 function searchByNameOrCompany(clients) {
     const input = document.getElementById('search-input');
@@ -326,10 +349,16 @@ function searchByNameOrCompany(clients) {
     
     input.addEventListener('input', e => {
         let str = input.value.trim().toLowerCase();
+
+        if (str === ""){
+            renderClients(rendered);
+            return;
+        }
+        
         let isSearched = [];
-        for (let i=0; i<clients.length; i++){
-            if (clients[i].name.toLowerCase().includes(str) || clients[i].company.toLowerCase().includes(str))
-                isSearched.push(clients[i]);
+        for (let i=0; i<rendered.length; i++){
+            if (rendered[i].name.toLowerCase().includes(str) || rendered[i].company.toLowerCase().includes(str))
+                isSearched.push(rendered[i]);
         }
 
         renderClients(isSearched);
@@ -357,7 +386,10 @@ function filterCards(clients) {
         e.target.classList.add('active');
 
         // case: All, Lead, Contacted, Won, Lost.
-        if (status === "All") renderClients(clients);
+        if (status === "All"){
+            renderClients(clients);
+            rendered = [...clients];
+        }
         else {
             let filteredChips = [];
             for (let i=0; i<clients.length; i++){
@@ -366,6 +398,7 @@ function filterCards(clients) {
             }
 
             renderClients(filteredChips);
+            rendered = whatIsRendered(filteredChips);
         }
     });
 }
@@ -379,7 +412,7 @@ function sorts(clients) {
 
     function newestFirstSort() {
         let sortedArrar = [];
-        const sortedClients = [...clients].sort((a, b) => {
+        const sortedClients = [...rendered].sort((a, b) => {
             return Date.parse(b.createdAt) - Date.parse(a.createdAt);
         });
 
@@ -388,7 +421,7 @@ function sorts(clients) {
     newestFirstSort();
 
     function nameAZsort() {
-        const sortedClients = [...clients].sort((a, b) => {
+        const sortedClients = [...rendered].sort((a, b) => {
             return a.name.localeCompare(b.name);
         });
 
@@ -396,7 +429,7 @@ function sorts(clients) {
     } 
 
     function dealValueSort() {
-        const sortedClients = [...clients].sort((a, b) => {
+        const sortedClients = [...rendered].sort((a, b) => {
             return b.dealValue - a.dealValue;
         });
 
@@ -421,6 +454,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     let clients = await loadClients();
 
     renderClients(clients);
+    rendered = [...clients];
 
     // client cards functional
     setupClientModal(clients);
