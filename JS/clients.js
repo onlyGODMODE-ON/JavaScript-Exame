@@ -355,7 +355,7 @@ function filterCards(clients) {
         
         e.target.classList.add('active');
 
-        // case: All
+        // case: All, Lead, Contacted, Won, Lost.
         if (status === "All") renderClients(clients);
         else {
             let filteredChips = [];
@@ -366,6 +366,51 @@ function filterCards(clients) {
 
             renderClients(filteredChips);
         }
+    });
+}
+
+
+// ==================================
+//           S  O  R  T  S
+// ==================================
+
+function sorts(clients) {
+
+    function newestFirstSort() {
+        let sortedArrar = [];
+        const sortedClients = [...clients].sort((a, b) => {
+            return Date.parse(b.createdAt) - Date.parse(a.createdAt);
+        });
+
+        renderClients(sortedClients);
+    }
+    newestFirstSort();
+
+    function nameAZsort() {
+        const sortedClients = [...clients].sort((a, b) => {
+            return a.name.localeCompare(b.name);
+        });
+
+        renderClients(sortedClients);
+    } 
+
+    function dealValueSort() {
+        const sortedClients = [...clients].sort((a, b) => {
+            return b.dealValue - a.dealValue;
+        });
+
+        renderClients(sortedClients);
+    }
+
+
+    let sortSelect = document.getElementById('sort-select');
+
+    sortSelect.addEventListener('change', e => {
+        let sortType = e.target.value;
+
+        if (sortType === "newest-first") newestFirstSort();
+        if (sortType === "name-asc") nameAZsort();
+        if (sortType === "deal-desc") dealValueSort();
     });
 }
 
@@ -386,5 +431,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     // search functional
     searchByNameOrCompany(clients);
     filterCards(clients);
+
+    sorts(clients);
 });
 
