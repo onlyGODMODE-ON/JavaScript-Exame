@@ -322,6 +322,7 @@ function addClient(clients) {
 
 function searchByNameOrCompany(clients) {
     const input = document.getElementById('search-input');
+    if (!input) return;
     
     input.addEventListener('input', e => {
         let str = input.value.trim().toLowerCase();
@@ -404,7 +405,8 @@ function sorts(clients) {
 
 
     let sortSelect = document.getElementById('sort-select');
-
+    if (!sortSelect) return;
+    
     sortSelect.addEventListener('change', e => {
         let sortType = e.target.value;
 
