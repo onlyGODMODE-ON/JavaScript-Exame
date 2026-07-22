@@ -6,6 +6,7 @@ function currentUserInfo() {
     if (!users || !session) return;
 
     let user = users.find(u => u.id === session.userId);
+
     return user;
 }
 
@@ -13,6 +14,8 @@ function currentUserInfo() {
 function addProfileInfo() {
     let currentUser = currentUserInfo();
     let profileCont = document.getElementById('profile-initials');
+    if (!profileCont) return;
+
     profileCont.textContent = currentUser.fullName.split(' ').map(name => name[0]).join('').toUpperCase();
 
     document.getElementById('profile-name').textContent = currentUser.fullName;
@@ -58,7 +61,72 @@ function changeName() {
     });
 }
 
+
+// password changer
+function changePassword() {
+    let editPasswordForm = document.getElementById('change-password-form');
+    if (!editPasswordForm) return;
+
+    editPasswordForm.addEventListener('submit', e => {
+        e.preventDefault();
+
+        currentPass    = editPasswordForm.querySelector('#currentPassword');
+        newPass        = editPasswordForm.querySelector('#newPassword');
+        confirmNewPass = editPasswordForm.querySelector('#confirmNewPassword');
+
+        resetFieldErrors({currentPass, newPass, confirmNewPass});
+
+        let currentUser = currentUserInfo();
+        let hasError = false;
+        
+
+        if (currentPass.value !== currentUser.password) {
+            showFieldError(currentPass, "Current password is incorrect");
+            hasError = true;
+        }
+
+        // CHECK new password
+        let pass = newPass.value;
+        let isNum = /[0-9]/.test(pass);
+        let isChar = /[a-zA-Z]/.test(pass);
+        let isPass = pass.length >= 8;
+
+        if (!isNum || !isChar || !isPass) {
+            showFieldError(newPass, "Password must be at least 8 characters and contain a letter and a number");
+            hasError = true;
+        } else if (currentPass.value === newPass.value) {
+            showFieldError(newPass, "New password must be different from the current one");
+            hasError = true;
+        }
+
+        if ((newPass.value.length > 0 || confirmNewPass.value.length > 0) && newPass.value !== confirmNewPass.value){
+            showFieldError(confirmNewPass, "Passwords do not match");
+            hasError = true;
+        }
+
+        if (hasError) return;
+        
+
+        const users = JSON.parse(localStorage.getItem('crm_users')) || [];
+        const session = JSON.parse(localStorage.getItem('crm_session'));
+
+        const user = users.find(u => u.id === session.userId);
+        if (!user) return;
+
+        user.password = newPass.value;
+
+        localStorage.setItem('crm_users', JSON.stringify(users));
+
+        showToast("Password changed ✓", "success");
+
+        editPasswordForm.reset();
+    });
+}
+
+
+
 document.addEventListener('DOMContentLoaded', () => {
     addProfileInfo();
     changeName();
+    changePassword();
 });
