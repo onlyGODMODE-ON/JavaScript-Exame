@@ -105,7 +105,7 @@ function changePassword() {
         }
 
         if (hasError) return;
-        
+
 
         const users = JSON.parse(localStorage.getItem('crm_users')) || [];
         const session = JSON.parse(localStorage.getItem('crm_session'));
@@ -123,10 +123,29 @@ function changePassword() {
     });
 }
 
+function resetCRMdata() {
+    let resetCRM = document.getElementById('reset-data-btn');
+    if (!resetCRM) return;
+    
+    resetCRM.addEventListener('click', async e => {
+        const confirmed = confirm("This will delete all your clients and reload the original 30. Continue?");
+        if (!confirmed) return;
 
+        localStorage.removeItem('crm_clients');
+
+        try {
+            await loadClients();
+            showToast("Client data has been reset ✓", "success");
+        } catch (err) {
+            console.error(err);
+            showToast("Could not reset data. Check your connection.", "error");
+        }
+    });
+}
 
 document.addEventListener('DOMContentLoaded', () => {
     addProfileInfo();
     changeName();
     changePassword();
+    resetCRMdata();
 });
