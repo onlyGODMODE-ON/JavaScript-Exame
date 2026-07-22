@@ -412,26 +412,26 @@ function sorts(clients) {
 
     function newestFirstSort() {
         let sortedArrar = [];
-        const sortedClients = [...rendered].sort((a, b) => {
-            return Date.parse(b.createdAt) - Date.parse(a.createdAt);
-        });
+        const sortedClients = [...rendered].sort((a, b) => 
+            Date.parse(b.createdAt) - Date.parse(a.createdAt)
+        );
 
         renderClients(sortedClients);
     }
     newestFirstSort();
 
     function nameAZsort() {
-        const sortedClients = [...rendered].sort((a, b) => {
-            return a.name.localeCompare(b.name);
-        });
+        const sortedClients = [...rendered].sort((a, b) => 
+            a.name.localeCompare(b.name)
+        );
 
         renderClients(sortedClients);
     } 
 
     function dealValueSort() {
-        const sortedClients = [...rendered].sort((a, b) => {
-            return b.dealValue - a.dealValue;
-        });
+        const sortedClients = [...rendered].sort((a, b) => 
+            b.dealValue - a.dealValue
+        );
 
         renderClients(sortedClients);
     }
