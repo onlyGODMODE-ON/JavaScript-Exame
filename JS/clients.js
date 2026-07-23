@@ -1,7 +1,5 @@
-
 // which client is open in modal
 let currentDetailClientId = null;
-let rendered = [];
 
 // Render Clients P4.3
 const formatCurrency = amount => '$' + amount.toLocaleString('en-US');
@@ -36,7 +34,7 @@ function buildClientCard(client) {
 function renderClients(clients) {
     const container = document.getElementById('clients-list');
     if (!container) return;
-    
+
     container.innerHTML = "";
 
     if (clients.length === 0) {
@@ -48,11 +46,43 @@ function renderClients(clients) {
 }
 
 
+// this function doing averything if you call it: filter, search, sort.
+function getVisibleClients(clients) {
+    let result = [...clients];
+
+    const activeChip = document.querySelector('.filter-chip.active');
+    const status = activeChip ? activeChip.dataset.status : 'All';
+    if (status !== 'All') {
+        result = result.filter(c => c.status === status);
+    }
+
+    const searchInput = document.getElementById('search-input');
+    const query = searchInput ? searchInput.value.trim().toLowerCase() : '';
+    if (query !== '') {
+        result = result.filter(c =>
+            c.name.toLowerCase().includes(query) || c.company.toLowerCase().includes(query)
+        );
+    }
+
+    const sortSelect = document.getElementById('sort-select');
+    const sortType = sortSelect ? sortSelect.value : 'newest-first';
+
+    if (sortType === 'name-asc') {
+        result.sort((a, b) => a.name.localeCompare(b.name));
+    } else if (sortType === 'deal-desc') {
+        result.sort((a, b) => b.dealValue - a.dealValue);
+    } else {
+        result.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    }
+
+    return result;
+}
+
+
 // ====================
 // client modal (panel)
 // ====================
 
-// add notes function
 function renderNotes(notes) {
     const notesList = document.getElementById('notes-list');
     if (!notesList) return;
@@ -85,7 +115,7 @@ function addNoteForm(clients) {
 
         const client = clients.find(c => c.id === currentDetailClientId);
         if (!client) return;
-        
+
         client.notes.push({ text, date: new Date().toLocaleString() });
         localStorage.setItem('crm_clients', JSON.stringify(clients));
 
@@ -94,27 +124,25 @@ function addNoteForm(clients) {
     });
 }
 
-
-
 function setupClientModal(clients) {
     const container = document.querySelector('.clients-list');
     const modal = document.querySelector('#client-detail-modal');
 
-    if (!container) return;
-    
+    if (!container || !modal) return;
+
     // open modal
     container.addEventListener('click', e => {
         if (e.target.closest('.status-select') || e.target.closest('.delete-btn')) return;
-        
+
         const clickedCard = e.target.closest('.client-card');
         if (!clickedCard) return;
 
-        modal.classList.add('open');
-
         const clientId = Number(clickedCard.getAttribute('data-id'));
-        currentDetailClientId = clientId;
         const client = clients.find(c => c.id === clientId);
-        
+        if (!client) return; // კლიენტი აღარ არსებობს (წაშლილია) - მოდალი აღარ იხსნება
+
+        currentDetailClientId = clientId;
+        modal.classList.add('open');
 
         modal.querySelector('#detail-avatar').src = client.image;
         modal.querySelector('#detail-name').textContent = client.name;
@@ -122,13 +150,13 @@ function setupClientModal(clients) {
         modal.querySelector('#detail-email').textContent = client.email;
         modal.querySelector('#detail-phone').textContent = client.phone;
         modal.querySelector('#detail-status').textContent = client.status;
-        modal.querySelector('#detail-deal-value').textContent =  formatCurrency(client.dealValue);
+        modal.querySelector('#detail-deal-value').textContent = formatCurrency(client.dealValue);
         modal.querySelector('#detail-since').textContent = new Date(client.createdAt).toLocaleDateString("en-US");
 
         renderNotes(client.notes);
     });
 
-    // remain in 1 minute
+    // remind in 1 minute
     const remindBtn = document.getElementById('remind-btn');
     remindBtn.addEventListener('click', () => {
         const client = clients.find(c => c.id === currentDetailClientId);
@@ -145,13 +173,13 @@ function setupClientModal(clients) {
     const closeModal = modal.querySelector('.modal-close');
     modal.addEventListener('click', e => {
         if (e.target === closeModal || !e.target.closest('.modal-box'))
-        modal.classList.remove('open');
+            modal.classList.remove('open');
     });
 }
 
 
 // ====================
-// add status changeing
+// add status changing
 // ====================
 
 function changeStatus(clients) {
@@ -159,15 +187,17 @@ function changeStatus(clients) {
     if (!container) return;
 
     container.addEventListener('change', e => {
-        let currentCard = e.target;
-        if (!currentCard.matches(".status-select")) return;
+        let currentSelect = e.target;
+        if (!currentSelect.matches(".status-select")) return;
 
-        const clientId = Number(currentCard.getAttribute('data-id'));
+        const clientId = Number(currentSelect.getAttribute('data-id'));
         const client = clients.find(c => c.id === clientId);
+        if (!client) return;
 
-        client.status = currentCard.value;
-        
+        client.status = currentSelect.value;
+
         localStorage.setItem('crm_clients', JSON.stringify(clients));
+        renderClients(getVisibleClients(clients));
     });
 }
 
@@ -186,7 +216,7 @@ function deleteClient(clients) {
 
         const card = deleteBtn.closest('.client-card');
         const clientId = Number(card.getAttribute('data-id'));
-        
+
         const confirmed = confirm("Delete this client? This cannot be undone.");
         if (!confirmed) return;
 
@@ -199,7 +229,7 @@ function deleteClient(clients) {
             }
         } catch (err) {
             console.error(err);
-            return;
+            // მაინც ვაგრძელებთ ლოკალურ წაშლას - localStorage-ია ჩვენი ნამდვილი წყარო
         }
 
         const index = clients.findIndex(client => client.id === clientId);
@@ -207,7 +237,7 @@ function deleteClient(clients) {
 
         localStorage.setItem("crm_clients", JSON.stringify(clients));
 
-        renderClients(clients);
+        renderClients(getVisibleClients(clients));
         showToast("Client deleted", "success");
     });
 }
@@ -215,26 +245,25 @@ function deleteClient(clients) {
 
 // ======================
 // add clients functional
-// ====================== 
+// ======================
 
 function addClient(clients) {
     const modal = document.querySelector('#add-client-modal');
     const clientBtn = document.getElementById('add-client-btn');
-    const addClientModal = document.querySelector('.modal-overlay');
-    if (!addClientModal) return;
+    if (!modal || !clientBtn) return;
 
-    clientBtn.addEventListener('click', e => {
-        addClientModal.classList.add('open');
+    clientBtn.addEventListener('click', () => {
+        modal.classList.add('open');
     });
 
     const newUser = {
-        name    :  document.getElementById('new-name'),
-        email   :  document.getElementById('new-email'),
-        phone   :  document.getElementById('new-phone'),
-        company :  document.getElementById('new-company'),
-        deal    :  document.getElementById('new-deal-value'),
-        status  :  document.getElementById('new-status')
-    }
+        name: document.getElementById('new-name'),
+        email: document.getElementById('new-email'),
+        phone: document.getElementById('new-phone'),
+        company: document.getElementById('new-company'),
+        deal: document.getElementById('new-deal-value'),
+        status: document.getElementById('new-status')
+    };
 
     const addForm = document.getElementById('add-client-form');
 
@@ -264,39 +293,38 @@ function addClient(clients) {
 
         // CHECK Deal Value
         let dealValue = newUser.deal.value;
-        let isPositiveNumber = true;
-
-        if (dealValue === "") isPositiveNumber = false;
+        let isPositiveNumber = dealValue !== "";
 
         for (let char of dealValue) {
-            if ('0' <= char && char <= '9') continue;
-            else { isPositiveNumber = false; break; }
+            if (char >= '0' && char <= '9') continue;
+            isPositiveNumber = false;
+            break;
         }
-            
+
         if (!isPositiveNumber) {
             showFieldError(newUser.deal, "Deal value must be a positive number");
             isError = true;
         }
-            
+
         if (isError) return;
 
         let addNewUser = {
             id: Date.now(),
-            name: newUser.name.value,
-            email: newUser.email.value.trim().toLowerCase(),
+            name: newUser.name.value.trim(),
+            email: email,
             phone: newUser.phone.value.trim(),
             company: newUser.company.value.trim(),
-            image: "https://dummyjson.com/icon/newclient/128",
+            image: "https://ui-avatars.com/api/?name=" + encodeURIComponent(newUser.name.value.trim()) + "&background=4f8cff&color=fff",
             status: newUser.status.value,
             dealValue: Number(newUser.deal.value),
             notes: [],
             createdAt: new Date().toISOString()
-        }
+        };
 
-        clients.push(addNewUser);
+        clients.unshift(addNewUser);
         localStorage.setItem("crm_clients", JSON.stringify(clients));
 
-        renderClients(clients);
+        renderClients(getVisibleClients(clients));
 
         addForm.reset();
         modal.classList.remove('open');
@@ -304,38 +332,14 @@ function addClient(clients) {
         showToast("Client added ✓", "success");
     });
 
-
-    // remove add client modal
+    // close add-client modal
     const closeModal = modal.querySelector('.modal-close');
     modal.addEventListener('click', e => {
-        if (e.target === closeModal || !e.target.closest('.modal-box')){
+        if (e.target === closeModal || !e.target.closest('.modal-box')) {
             resetFieldErrors(newUser);
             modal.classList.remove('open');
         }
     });
-}
-
-
-// function returns object array which are elements on screen
-function whatIsRendered(clients) {
-    const container = document.getElementById('clients-list');
-    if (!container) return;
-
-    let ids = container.querySelectorAll('.client-card');
-
-    let onScreen = [];
-    
-    for (let i=0; i<ids.length; i++) {
-        let cardId = ids[i].dataset.id;
-        for (let j=0; j<clients.length; j++){
-            if (clients[j].id == cardId){
-                onScreen.push(clients[j]);
-                break;
-            }       
-        }
-    }
-
-    return onScreen;
 }
 
 
@@ -346,22 +350,9 @@ function whatIsRendered(clients) {
 function searchByNameOrCompany(clients) {
     const input = document.getElementById('search-input');
     if (!input) return;
-    
-    input.addEventListener('input', e => {
-        let str = input.value.trim().toLowerCase();
 
-        if (str === ""){
-            renderClients(rendered);
-            return;
-        }
-        
-        let isSearched = [];
-        for (let i=0; i<rendered.length; i++){
-            if (rendered[i].name.toLowerCase().includes(str) || rendered[i].company.toLowerCase().includes(str))
-                isSearched.push(rendered[i]);
-        }
-
-        renderClients(isSearched);
+    input.addEventListener('input', () => {
+        renderClients(getVisibleClients(clients));
     });
 }
 
@@ -377,29 +368,11 @@ function filterCards(clients) {
     filter.addEventListener('click', e => {
         if (!e.target.classList.contains('filter-chip')) return;
 
-        const status = e.target.dataset.status;
-
         const chips = filter.querySelectorAll('.filter-chip');
-        for (let i=0; i<chips.length; i++)
-            chips[i].classList.remove('active');
-        
+        chips.forEach(chip => chip.classList.remove('active'));
         e.target.classList.add('active');
 
-        // case: All, Lead, Contacted, Won, Lost.
-        if (status === "All"){
-            renderClients(clients);
-            rendered = [...clients];
-        }
-        else {
-            let filteredChips = [];
-            for (let i=0; i<clients.length; i++){
-                if (clients[i].status === status)
-                    filteredChips.push(clients[i]);
-            }
-
-            renderClients(filteredChips);
-            rendered = whatIsRendered(filteredChips);
-        }
+        renderClients(getVisibleClients(clients));
     });
 }
 
@@ -409,43 +382,11 @@ function filterCards(clients) {
 // ==================================
 
 function sorts(clients) {
-
-    function newestFirstSort() {
-        let sortedArrar = [];
-        const sortedClients = [...rendered].sort((a, b) => 
-            Date.parse(b.createdAt) - Date.parse(a.createdAt)
-        );
-
-        renderClients(sortedClients);
-    }
-    newestFirstSort();
-
-    function nameAZsort() {
-        const sortedClients = [...rendered].sort((a, b) => 
-            a.name.localeCompare(b.name)
-        );
-
-        renderClients(sortedClients);
-    } 
-
-    function dealValueSort() {
-        const sortedClients = [...rendered].sort((a, b) => 
-            b.dealValue - a.dealValue
-        );
-
-        renderClients(sortedClients);
-    }
-
-
-    let sortSelect = document.getElementById('sort-select');
+    const sortSelect = document.getElementById('sort-select');
     if (!sortSelect) return;
-    
-    sortSelect.addEventListener('change', e => {
-        let sortType = e.target.value;
 
-        if (sortType === "newest-first") newestFirstSort();
-        if (sortType === "name-asc") nameAZsort();
-        if (sortType === "deal-desc") dealValueSort();
+    sortSelect.addEventListener('change', () => {
+        renderClients(getVisibleClients(clients));
     });
 }
 
@@ -453,8 +394,7 @@ function sorts(clients) {
 document.addEventListener('DOMContentLoaded', async () => {
     let clients = await loadClients();
 
-    renderClients(clients);
-    rendered = [...clients];
+    renderClients(getVisibleClients(clients));
 
     // client cards functional
     setupClientModal(clients);
@@ -470,4 +410,3 @@ document.addEventListener('DOMContentLoaded', async () => {
 
     sorts(clients);
 });
-
