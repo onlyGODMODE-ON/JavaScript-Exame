@@ -123,6 +123,9 @@ function renderRecentClients(clients) {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // theme toggle
+    applyStoredTheme();
+
     showGreeting();
     startLiveClock();
 

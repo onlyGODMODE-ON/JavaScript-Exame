@@ -144,6 +144,9 @@ function resetCRMdata() {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
+    // theme toggle
+    applyStoredTheme();
+
     addProfileInfo();
     changeName();
     changePassword();

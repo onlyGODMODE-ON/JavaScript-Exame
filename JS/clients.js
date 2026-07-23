@@ -392,6 +392,9 @@ function sorts(clients) {
 
 
 document.addEventListener('DOMContentLoaded', async () => {
+    // theme toggle
+    applyStoredTheme();
+    
     let clients = await loadClients();
 
     renderClients(getVisibleClients(clients));
