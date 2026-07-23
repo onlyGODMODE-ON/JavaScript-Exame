@@ -9,9 +9,21 @@ function setupLogout() {
 }
 
 
+function changeNavLinkColor() {
+    const currentPage = window.location.pathname.split('/').pop();
+    console.log(currentPage, typeof currentPage);
+    
+    document.querySelectorAll('.nav-link').forEach((link) => {
+        const linkPage = link.getAttribute('href');
+        if (linkPage === currentPage)
+            link.classList.add('active');
+    });
+}
+
 
 document.addEventListener('DOMContentLoaded', () => {
     setupLogout();
+    changeNavLinkColor();
 });
 
 
