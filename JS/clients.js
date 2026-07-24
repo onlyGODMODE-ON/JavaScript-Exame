@@ -139,7 +139,7 @@ function setupClientModal(clients) {
 
         const clientId = Number(clickedCard.getAttribute('data-id'));
         const client = clients.find(c => c.id === clientId);
-        if (!client) return; // კლიენტი აღარ არსებობს (წაშლილია) - მოდალი აღარ იხსნება
+        if (!client) return;
 
         currentDetailClientId = clientId;
         modal.classList.add('open');
