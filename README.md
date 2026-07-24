@@ -36,7 +36,7 @@ This project has no build step and no dependencies.
 
 ## Live Demo
 
-`<add your Vercel or Netlify link here before submitting>`
+`10x-crm-mate-morchadze-amgf.vercel.app`
 
 ## Test Account
 
